@@ -8,23 +8,22 @@ import java.util.Scanner;
 public class MapConnection implements Runnable {
 
 	private Socket s;
-	private String client;
+	private int id;
 	private Scanner in;
 	private PrintWriter out;
 	
 	public MapConnection(Socket s) {
 		this.s = s;
-		client = s.getInetAddress().toString();
+		id = 0;
 		
-		if(getMC(client) == null) MapServer.connections.add(this);
-		else
-			try {
-				s.close();
-			} catch (Exception ex) {}
+		while(getMC(getClient()) != null) id++;
+		
+		MapServer.connections.add(this);
+		System.out.println("Connected to " + getClient());
 	}
 	
 	public void run() {
-		String client = s.getInetAddress().toString();
+		String client = getClient();
 		try {
 			in = new Scanner(s.getInputStream());
 			out = new PrintWriter(s.getOutputStream(), true);
@@ -39,7 +38,7 @@ public class MapConnection implements Runnable {
 	}
 	
 	public String getClient() {
-		return client;
+		return s.getInetAddress().toString() + "/" + id;
 	}
 	
 	public void out(String s) {
@@ -50,7 +49,8 @@ public class MapConnection implements Runnable {
 	}
 	
 	private void in(String s) {
-		if(client.equals("/172.79.103.233") && s.equals("end")) MapServer.end();
+		String client = getClient();
+		if(client.equals("/172.79.103.233/0") && s.equals("end")) MapServer.end();
 		else for(MapConnection mc : MapServer.connections) {
 			if(mc != this) {
 				System.out.println("Sending \"" + s + "\" to " + mc.getClient() + " from " + getClient());
@@ -60,7 +60,7 @@ public class MapConnection implements Runnable {
 	}
 	
 	public void close() {
-		System.out.println("Connection to " + client + " lost!");
+		System.out.println("Connection to " + getClient() + " lost!");
 		MapServer.connections.remove(this);
 		try {
 			s.close();
