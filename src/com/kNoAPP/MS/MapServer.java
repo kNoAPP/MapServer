@@ -53,7 +53,10 @@ public class MapServer {
 			while(true) {
 				try {
 					String input = in.readLine();
-					if(input != null) System.out.println("It works!");
+					if(input != null) {
+						System.out.println(">> " + input);
+						if(input.equalsIgnoreCase("end")) end();
+					}
 					Thread.sleep(500);
 				} catch (Exception ex) {}
 			}
